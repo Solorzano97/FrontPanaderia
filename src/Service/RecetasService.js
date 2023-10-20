@@ -1,17 +1,36 @@
-import Axios from "axios";
+import axios from "axios";
 
-const baseURL = "http://localhost:8080"; // Reemplaza con la URL real de tu backend
+class RecetasService {
+  baseUrl = "http://localhost:8080/receta/all";
+  API_URL = "http://localhost:8080/receta/save";
 
-const RecetasService = {
-  getAllRecetas: async () => {
+  async getAllRecetas() {
     try {
-      const response = await Axios.get(`${baseURL}/receta/all`);
-      return response.data;
+      const response = await axios.get(this.baseUrl);
+      return response.data.body;
     } catch (error) {
-      console.error("Error al obtener las recetas:", error);
       throw error;
     }
-  },
-};
+  }
 
-export default RecetasService;
+  async createReceta(receta) {
+    try {
+      const response = await axios.post(this.API_URL, receta);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updateReceta(id, receta) {
+    const updateURL = `http://localhost:8080/receta/changeReceta/${id}`;
+    try {
+      const response = await axios.put(updateURL, receta);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+}
+
+export default new RecetasService();
