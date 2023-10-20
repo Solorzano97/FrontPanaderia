@@ -11,13 +11,15 @@ import "../styles/DetallePedido.css";
 function DetallePedido() {
   const [detallePedidos, setDetallePedidos] = useState([]);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [nuevoDetalle, setNuevoDetalle] = useState({
     idPedido: "",
     idProducto: "",
     cantidad: "",
     direccionEnvio: "",
   });
-  const [showDialog, setShowDialog] = useState(false);
+  const [editingDetalle, setEditingDetalle] = useState(null);
 
   useEffect(() => {
     obtenerDetallePedidos();
@@ -30,22 +32,48 @@ function DetallePedido() {
     } catch (error) {
       console.error("Error al obtener los detalles de pedido:", error);
     }
-  };
-
-  const formatearFecha = (fecha) => {
-    const options = { year: "2-digit", month: "2-digit", day: "2-digit" };
-    return new Date(fecha).toLocaleDateString("es-CO", options);
-  };
+  }
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    setNuevoDetalle({
-      ...nuevoDetalle,
-      [name]: value,
-    });
+    if (showAddDialog) {
+      setNuevoDetalle({
+        ...nuevoDetalle,
+        [name]: value,
+      });
+    } else if (showEditDialog) {
+      setEditingDetalle({
+        ...editingDetalle,
+        [name]: value,
+      });
+    }
   };
 
-  const handleFormSubmit = () => {
+  const handleAddClick = () => {
+    setShowAddDialog(true);
+  };
+
+  const handleEditClick = (detalle) => {
+    setEditingDetalle({ ...detalle });
+    setShowEditDialog(true);
+  };
+
+  const handleCancelAdd = () => {
+    setNuevoDetalle({
+      idPedido: "",
+      idProducto: "",
+      cantidad: "",
+      direccionEnvio: "",
+    });
+    setShowAddDialog(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingDetalle(null);
+    setShowEditDialog(false);
+  };
+
+  const handleSaveAdd = () => {
     const nuevoDetallePedido = {
       pedido: {
         idPedido: parseInt(nuevoDetalle.idPedido),
@@ -61,11 +89,42 @@ function DetallePedido() {
       .then((response) => {
         console.log("Detalle de pedido agregado:", response);
         obtenerDetallePedidos();
-        setShowDialog(false);
+        setNuevoDetalle({
+          idPedido: "",
+          idProducto: "",
+          cantidad: "",
+          direccionEnvio: "",
+        });
+        setShowAddDialog(false);
       })
       .catch((error) => {
         console.error("Error al agregar el detalle de pedido:", error);
       });
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingDetalle) {
+      console.error("Detalle de edición no encontrado.");
+      setShowEditDialog(false);
+      return;
+    }
+
+    // Utiliza el servicio para actualizar el detalle
+    DetallePedidoService.updateDetallePedido(editingDetalle.idDetalle, editingDetalle)
+      .then((response) => {
+        console.log("Detalle de pedido actualizado correctamente:", response);
+        obtenerDetallePedidos();
+        setEditingDetalle(null);
+        setShowEditDialog(false);
+      })
+      .catch((error) => {
+        console.error("Error al actualizar el detalle de pedido:", error);
+      });
+  };
+
+  const formatearFecha = (fecha) => {
+    const options = { year: "2-digit", month: "2-digit", day: "2-digit" };
+    return new Date(fecha).toLocaleDateString("es-CO", options);
   };
 
   return (
@@ -100,7 +159,7 @@ function DetallePedido() {
             <Button
               label="Agregar Detalle"
               icon="pi pi-plus"
-              onClick={() => setShowDialog(true)}
+              onClick={handleAddClick}
             />
           </div>
         </div>
@@ -120,6 +179,7 @@ function DetallePedido() {
               <th>Nombre Producto</th>
               <th>Cantidad</th>
               <th>Dirección de Envío</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -133,12 +193,19 @@ function DetallePedido() {
                 <td>{detallePedido.producto.nombreProducto}</td>
                 <td>{detallePedido.cantidad}</td>
                 <td>{detallePedido.direccionEnvio}</td>
+                <td>
+                  <Button
+                    label="Editar"
+                    icon="pi pi-pencil"
+                    onClick={() => handleEditClick(detallePedido)}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </main>
-      <Dialog header="Agregar Nuevo Detalle" visible={showDialog} style={{ width: "50vw" }} onHide={() => setShowDialog(false)}>
+      <Dialog header="Agregar Nuevo Detalle" visible={showAddDialog} style={{ width: "50vw" }} onHide={handleCancelAdd}>
         <div className="p-grid">
           <div className="p-col-12">
             <span className="p-float-label">
@@ -185,7 +252,58 @@ function DetallePedido() {
             </span>
           </div>
           <div className="p-col-12">
-            <Button label="Guardar" icon="pi pi-check" onClick={handleFormSubmit} />
+            <Button label="Guardar" icon="pi pi-check" onClick={handleSaveAdd} />
+          </div>
+        </div>
+      </Dialog>
+      <Dialog header="Editar Detalle" visible={showEditDialog} style={{ width: "50vw" }} onHide={handleCancelEdit}>
+        <div className="p-grid">
+          <div className="p-col-12">
+            <span className="p-float-label">
+              <InputText
+                id="idPedido"
+                name="idPedido"
+                value={editingDetalle ? editingDetalle.pedido.idPedido : ""}
+                onChange={handleInputChange}
+              />
+              <label htmlFor="idPedido">ID Pedido</label>
+            </span>
+          </div>
+          <div className="p-col-12">
+            <span className="p-float-label">
+              <InputText
+                id="idProducto"
+                name="idProducto"
+                value={editingDetalle ? editingDetalle.producto.idProducto : ""}
+                onChange={handleInputChange}
+              />
+              <label htmlFor="idProducto">ID Producto</label>
+            </span>
+          </div>
+          <div className="p-col-12">
+            <span className="p-float-label">
+              <InputText
+                id="cantidad"
+                name="cantidad"
+                value={editingDetalle ? editingDetalle.cantidad : ""}
+                onChange={handleInputChange}
+              />
+              <label htmlFor="cantidad">Cantidad</label>
+            </span>
+          </div>
+          <div className="p-col-12">
+            <span className="p-float-label">
+              <InputText
+                id="direccionEnvio"
+                name="direccionEnvio"
+                value={editingDetalle ? editingDetalle.direccionEnvio : ""}
+                onChange={handleInputChange}
+              />
+              <label htmlFor="direccionEnvio">Dirección de Envío</label>
+            </span>
+          </div>
+          <div className="p-col-12">
+            <Button label="Guardar" icon="pi pi-check" onClick={handleSaveEdit} />
           </div>
         </div>
       </Dialog>
