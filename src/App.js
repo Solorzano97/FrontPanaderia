@@ -5,6 +5,7 @@ import Roles from "./Components/Roles"; // Importa el componente de roles
 import Recetas from "./Components/Recetas";
 import DetallePedido from "./Components/DetallePedido";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Pedidos from "./Components/Pedidos";
 
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
           <Route path="/roles" element={<Roles />} />
           <Route path="/recetas" element={<Recetas />} />
           <Route path="/detallePedido" element={<DetallePedido />} />
+          <Route path="/Pedido" element={<Pedidos />} />
           {/* Otras rutas según sea necesario */}
           <Route index element={<Login />} />
         </Routes>
