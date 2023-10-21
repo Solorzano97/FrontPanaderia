@@ -21,6 +21,9 @@ function Pedidos() {
   });
   const [editingDetalle, setEditingDetalle] = useState(null);
 
+  const [showDetalleDialog, setShowDetalleDialog] = useState(false);
+  const [detallePedidoData, setDetallePedidoData] = useState(null);
+
   useEffect(() => {
     obtenerDetallePedidos();
   }, []);
@@ -61,6 +64,46 @@ function Pedidos() {
   const handleEditClick = (detalle) => {
     setEditingDetalle({ ...detalle });
     setShowEditDialog(true);
+  };
+
+  const handleDetalleClick = async (idPedido) => {
+    try {
+      const response = await PedidosService.getDetallePedido(idPedido);
+      console.log("Detalles del pedido:", response);
+      
+      if (Array.isArray(response.body) && response.body.length > 0) {
+        setDetallePedidoData(response.body);
+        setShowDetalleDialog(true);
+      } else {
+        setDetallePedidoData([]);
+        setShowDetalleDialog(true);
+      }
+    } catch (error) {
+      console.error("Error al obtener los detalles del pedido:", error);
+    }
+  };
+  
+  
+
+  const handleEntregar = (detallePedido) => {
+    if (detallePedido && detallePedido.idPedido) {
+      const updatedDetallePedido = {
+        ...detallePedido,
+        estado: {
+          idEstado: 2,
+          descripcion: 'entregado',
+        },
+      };
+
+      PedidosService.updatePedido(updatedDetallePedido.idPedido, updatedDetallePedido)
+        .then((response) => {
+          console.log("Detalle de pedido actualizado a 'Entregado':", response);
+          obtenerDetallePedidos();
+        })
+        .catch((error) => {
+          console.error("Error al actualizar el detalle de pedido:", error);
+        });
+    }
   };
 
   const handleCancelAdd = () => {
@@ -111,27 +154,6 @@ function Pedidos() {
       });
   };
 
-  const handleEntregar = (detallePedido) => {
-    if (detallePedido && detallePedido.idPedido) {
-      const updatedDetallePedido = {
-        ...detallePedido,
-        estado: {
-          idEstado: 2,
-          descripcion: 'Entregado',
-        },
-      };
-  
-      PedidosService.updatePedido(updatedDetallePedido.idPedido, updatedDetallePedido)
-        .then((response) => {
-          console.log("Detalle de pedido actualizado a 'Entregado':", response);
-          obtenerDetallePedidos();
-        })
-        .catch((error) => {
-          console.error("Error al actualizar el detalle de pedido:", error);
-        });
-    }
-  };
-
   const formatearFecha = (fecha) => {
     const options = { year: "2-digit", month: "2-digit", day: "2-digit" };
     return new Date(fecha).toLocaleDateString("es-CO", options);
@@ -161,6 +183,11 @@ function Pedidos() {
                 </Link>
               </li>
               <li className="nav-item">
+                <Link to="/detallePedido" className="nav-link active" aria-current="page">
+                  Detalle pedidos
+                </Link>
+              </li>
+              <li className="nav-item">
                 <Link to="/recetas" className="nav-link">
                   Recetas
                 </Link>
@@ -176,13 +203,14 @@ function Pedidos() {
       </nav>
       <main className="col-md-9 ms-sm-auto col-lg-10 px-md-4">
         <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-          <h1 className="h2">Detalles de Pedido</h1>
+          <h1 className="h2">Pedidos</h1>
         </div>
         <table className="table">
           <thead>
             <tr>
               <th>ID PEDIDO</th>
               <th>fechaPedido</th>
+              <th>sucursal</th>
               <th>Estado</th>
               <th>accion</th>
             </tr>
@@ -192,6 +220,7 @@ function Pedidos() {
               <tr key={detallePedido.idPedido}>
                 <td>{detallePedido.sucursal.idSucursal}</td>
                 <td>{formatearFecha(detallePedido.fechaPedido)}</td>
+                <td>{detallePedido.sucursal.nombreSucursal}</td>
                 <td>{detallePedido.estado.descripcion}</td>
                 <td>
                   <Button
@@ -203,6 +232,11 @@ function Pedidos() {
                     label="Entregar"
                     icon="pi pi-check"
                     onClick={() => handleEntregar(detallePedido)}
+                  />
+                  <Button
+                    label="Detalles"
+                    icon="pi pi-search"
+                    onClick={() => handleDetalleClick(detallePedido.idPedido)}
                   />
                 </td>
               </tr>
@@ -257,7 +291,7 @@ function Pedidos() {
               <InputText
                 id="idSucursal"
                 name="idSucursal"
-                value={editingDetalle ? editingDetalle.sucursal.idSucursal: ""}
+                value={editingDetalle ? editingDetalle.sucursal.idSucursal : ""}
                 onChange={handleInputChange}
               />
               <label htmlFor="idSucursal">ID Sucursal</label>
@@ -268,7 +302,7 @@ function Pedidos() {
               <InputText
                 id="fechaPedido"
                 name="fechaPedido"
-                value={editingDetalle ? editingDetalle.fechaPedido: ""}
+                value={editingDetalle ? editingDetalle.fechaPedido : ""}
                 onChange={handleInputChange}
               />
               <label htmlFor="fechaPedido">ID Producto</label>
@@ -279,7 +313,7 @@ function Pedidos() {
               <InputText
                 id="idEstado"
                 name="idEstado"
-                value={editingDetalle ? editingDetalle.idEstado: ""}
+                value={editingDetalle ? editingDetalle.idEstado : ""}
                 onChange={handleInputChange}
               />
               <label htmlFor="idEstado">id estado</label>
@@ -290,6 +324,28 @@ function Pedidos() {
           </div>
         </div>
       </Dialog>
+      <Dialog header="Detalles del Pedido" visible={showDetalleDialog} style={{ width: "50vw" }} onHide={() => setShowDetalleDialog(false)}>
+  <div className="p-grid">
+    <div className="p-col-12">
+      <h2>Detalles del Pedido</h2>
+      {detallePedidoData ? (
+        <ul>
+          {detallePedidoData.map((detallePedido, index) => (
+            <li key={index}>
+              <p>ID de Pedido: {detallePedido.idDetalle}</p>
+              <p>Producto: {detallePedido.producto ? detallePedido.producto.nombreProducto : "No disponible"}</p>
+              <p>Cantidad: {detallePedido.cantidad}</p>
+              <p>Dirección de Envío: {detallePedido.direccionEnvio}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No se encontraron detalles de pedido.</p>
+      )}
+    </div>
+  </div>
+</Dialog>
+
     </div>
   );
 }

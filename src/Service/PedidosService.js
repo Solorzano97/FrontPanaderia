@@ -3,6 +3,8 @@ import axios from "axios";
 class PedidosService {
   baseUrl = "http://localhost:8080/pedidos/all";
   API_URL = "http://localhost:8080/pedidos/save";
+  DETALLE_URL = "http://localhost:8080/pedidos/findDetalle"; // URL para obtener detalles por ID
+
 
   async getAllPedidos() {
     try {
@@ -31,6 +33,17 @@ class PedidosService {
       throw error;
     }
   }
+
+  async getDetallePedido(idPedido) {
+    const detalleURL = `${this.DETALLE_URL}/${idPedido}`;
+    try {
+      const response = await axios.get(detalleURL);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
 }
 
 export default new PedidosService();

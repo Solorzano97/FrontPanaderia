@@ -16,7 +16,7 @@ function Login() {
       const response = await LoginService.login(username, password);
 
       if (response && response.body) {
-        navigate("/detallePedido");
+        navigate("/Pedido");
       } else {
         setError("Usuario o contraseña inválidos"); // Establece el mensaje de error
       }
