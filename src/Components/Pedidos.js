@@ -13,12 +13,29 @@ function Pedidos() {
   const [detallePedidos, setDetallePedidos] = useState([]);
   const [menuVisible, setMenuVisible] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showAddDialog2, setShowAddDialog2] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [nuevoDetalle, setNuevoDetalle] = useState({
     idSucursal: "",
     fechaPedido: "",
     idEstado: "",
   });
+
+
+
+
+  const [nuevoDetalle2, setNuevoDetalle2] = useState({
+    idPedido: "",
+    idProducto: "",
+    cantidad: "",
+    direccionEnvio: "",
+  });
+
+
+
+
+
+
   const [editingDetalle, setEditingDetalle] = useState(null);
 
   const [showDetalleDialog, setShowDetalleDialog] = useState(false);
@@ -52,6 +69,37 @@ function Pedidos() {
     }
   };
 
+
+
+
+
+
+
+
+  const handleInputChange2 = (event) => {
+    const { name, value } = event.target;
+    if (showAddDialog2) {
+      setNuevoDetalle2({
+        ...nuevoDetalle2,
+        [name]: value,
+      });
+    } else if (showEditDialog) {
+      setEditingDetalle({
+        ...editingDetalle,
+        [name]: value,
+      });
+    }
+  };
+
+
+
+
+
+
+
+
+
+
   const handleAddClick = () => {
     setNuevoDetalle({
       idSucursal: "",
@@ -60,6 +108,34 @@ function Pedidos() {
     });
     setShowAddDialog(true);
   };
+
+
+
+
+
+
+
+
+
+
+  const handleAddDetalleClick = () => {
+    setNuevoDetalle2({
+      idPedido: "",
+      idProducto: "",
+      cantidad: "",
+      direccionEnvio: "",
+    });
+    setShowAddDialog2(true);
+  };
+
+
+
+
+
+
+
+
+
 
   const handleEditClick = (detalle) => {
     setEditingDetalle({ ...detalle });
@@ -110,6 +186,11 @@ function Pedidos() {
     setShowAddDialog(false);
   };
 
+
+  const handleCancelAdd2 = () => {
+    setShowAddDialog(false);
+  };
+
   const handleCancelEdit = () => {
     setShowEditDialog(false);
   };
@@ -135,6 +216,56 @@ function Pedidos() {
         console.error("Error al agregar el detalle de pedido:", error);
       });
   };
+
+
+
+
+
+
+
+
+  const handleSaveAddDetalle = () => {
+    console.log();
+    const nuevoDetallePedido2 = {
+      pedido: {
+        idPedido: parseInt(nuevoDetalle2.idPedido),
+      },
+      
+      producto: {
+        idProducto: parseInt(nuevoDetalle2.idProducto),
+      },
+      cantidad: parseInt(nuevoDetalle2.cantidad),
+      direccionEnvio: nuevoDetalle2.direccionEnvio,
+    };
+    console.log('enviara esto joder ' , nuevoDetallePedido2);
+    PedidosService.createDetallePedido(nuevoDetallePedido2)
+      .then((response) => {
+        console.log("Detalle de pedido agregado:", response);
+        obtenerDetallePedidos();
+        setNuevoDetalle2({
+          idPedido: "",
+          idProducto: "",
+          cantidad: "",
+          direccionEnvio: "",
+        });
+        setShowAddDialog2(false);
+      })
+      .catch((error) => {
+        console.error("Error al agregar el detalle de pedido:", error);
+      });
+  };
+
+
+
+
+
+
+
+
+
+
+
+
 
   const handleSaveEdit = () => {
     if (!editingDetalle) {
@@ -208,7 +339,8 @@ function Pedidos() {
         <table className="table">
           <thead>
             <tr>
-              <th>ID PEDIDO</th>
+            <th>Id Pedido</th>
+              <th>No.</th>
               <th>fechaPedido</th>
               <th>sucursal</th>
               <th>Estado</th>
@@ -218,6 +350,7 @@ function Pedidos() {
           <tbody>
             {detallePedidos.map((detallePedido) => (
               <tr key={detallePedido.idPedido}>
+                <td>{detallePedido.idPedido}</td>
                 <td>{detallePedido.sucursal.idSucursal}</td>
                 <td>{formatearFecha(detallePedido.fechaPedido)}</td>
                 <td>{detallePedido.sucursal.nombreSucursal}</td>
@@ -238,13 +371,18 @@ function Pedidos() {
                     icon="pi pi-search"
                     onClick={() => handleDetalleClick(detallePedido.idPedido)}
                   />
+                  <Button
+                    label="Agregar Detalle"
+                    icon="pi pi-search"
+                    onClick={() => handleAddDetalleClick()}
+                  />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </main>
-      <Dialog header="Agregar Nuevo Detalle" visible={showAddDialog} style={{ width: "50vw" }} onHide={handleCancelAdd}>
+      <Dialog header="Agregar Nuevo pedido" visible={showAddDialog} style={{ width: "50vw" }} onHide={handleCancelAdd}>
         <div className="p-grid">
           <div className="p-col-12">
             <span className="p-float-label">
@@ -284,6 +422,86 @@ function Pedidos() {
           </div>
         </div>
       </Dialog>
+
+
+
+
+
+
+
+
+
+
+
+
+      <Dialog header="Agregar Nuevo pedido" visible={showAddDialog2} style={{ width: "50vw" }} onHide={handleCancelAdd2}>
+        <div className="p-grid">
+          <div className="p-col-12">
+            <span className="p-float-label">
+              <InputText
+                id="idPedido"
+                name="idPedido"
+                value={nuevoDetalle2.idPedido}
+                onChange={handleInputChange2}
+              />
+              <label htmlFor="idPedido">ID Pedido</label>
+            </span>
+          </div>
+          <div className="p-col-12">
+            <span className="p-float-label">
+              <InputText
+                id="idProducto"
+                name="idProducto"
+                value={nuevoDetalle2.idProducto}
+                onChange={handleInputChange2}
+              />
+              <label htmlFor="idProducto">Id Producto</label>
+            </span>
+          </div>
+          <div className="p-col-12">
+            <span className="p-float-label">
+              <InputText
+                id="cantidad"
+                name="cantidad"
+                value={nuevoDetalle2.cantidad}
+                onChange={handleInputChange2}
+              />
+              <label htmlFor="cantidad">cantidad</label>
+            </span>
+          </div>
+          <div className="p-col-12">
+            <span className="p-float-label">
+              <InputText
+                id="direccionEnvio"
+                name="direccionEnvio"
+                value={nuevoDetalle2.direccionEnvio}
+                onChange={handleInputChange2}
+              />
+              <label htmlFor="direccionEnvio">Direccion Envio</label>
+            </span>
+          </div>
+          <div className="p-col-12">
+            <Button label="Guardar" icon="pi pi-check" onClick={handleSaveAddDetalle} />
+          </div>
+        </div>
+      </Dialog>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
       <Dialog header="Editar Detalle" visible={showEditDialog} style={{ width: "50vw" }} onHide={handleCancelEdit}>
         <div className="p-grid">
           <div className="p-col-12">
