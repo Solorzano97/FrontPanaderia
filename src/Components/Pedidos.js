@@ -173,6 +173,9 @@ function Pedidos() {
 
       PedidosService.updatePedido(updatedDetallePedido.idPedido, updatedDetallePedido)
         .then((response) => {
+           if (response.status === 400) {
+          console.error("Stock insuficiente");
+        }
           console.log("Detalle de pedido actualizado a 'Entregado':", response);
           obtenerDetallePedidos();
         })
