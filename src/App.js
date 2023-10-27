@@ -6,6 +6,7 @@ import Recetas from "./Components/Recetas";
 import DetallePedido from "./Components/DetallePedido";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Pedidos from "./Components/Pedidos";
+import Productos from "./Components/Productos";
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/recetas" element={<Recetas />} />
           <Route path="/detallePedido" element={<DetallePedido />} />
           <Route path="/Pedido" element={<Pedidos />} />
+          <Route path="/Productos" element={<Productos />} />
           {/* Otras rutas según sea necesario */}
           <Route index element={<Login />} />
         </Routes>

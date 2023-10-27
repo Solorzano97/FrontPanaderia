@@ -8,27 +8,27 @@ import "primereact/resources/primereact.min.css";
 import "primereact/resources/themes/saga-blue/theme.css";
 import "../styles/DetallePedido.css";
 import PedidosService from "../Service/PedidosService";
+import ProductosService from "../Service/ProductosService";
 
-function Pedidos() {
+function Productos() {
   const [detallePedidos, setDetallePedidos] = useState([]);
   const [menuVisible, setMenuVisible] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showAddDialog2, setShowAddDialog2] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [nuevoDetalle, setNuevoDetalle] = useState({
-    idSucursal: "",
-    fechaPedido: "",
-    idEstado: "",
+    nombreProducto: "",
+    tipo: "",
+    stock: "",
   });
 
 
 
 
   const [nuevoDetalle2, setNuevoDetalle2] = useState({
-    idPedido: "",
-    idProducto: "",
-    cantidad: "",
-    direccionEnvio: "",
+    nombreProducto: "",
+    tipo: "",
+    stock: "",
   });
 
 
@@ -47,7 +47,7 @@ function Pedidos() {
 
   const obtenerDetallePedidos = async () => {
     try {
-      const data = await PedidosService.getAllPedidos();
+      const data = await ProductosService.getAllProductos();
       setDetallePedidos(data.body);
     } catch (error) {
       console.error("Error al obtener los detalles de pedido:", error);
@@ -102,9 +102,9 @@ function Pedidos() {
 
   const handleAddClick = () => {
     setNuevoDetalle({
-      idSucursal: "",
-      fechaPedido: "",
-      idEstado: "",
+      nombreProducto: "",
+      tipo: "",
+      stock: "",
     });
     setShowAddDialog(true);
   };
@@ -120,10 +120,9 @@ function Pedidos() {
 
   const handleAddDetalleClick = () => {
     setNuevoDetalle2({
-      idPedido: "",
-      idProducto: "",
-      cantidad: "",
-      direccionEnvio: "",
+      nombreProducto: "",
+      tipo: "",
+      stock: "",
     });
     setShowAddDialog2(true);
   };
@@ -171,7 +170,7 @@ function Pedidos() {
         },
       };
 
-      PedidosService.updatePedido(updatedDetallePedido.idPedido, updatedDetallePedido)
+      PedidosService.updateProducto(updatedDetallePedido.idProducto, updatedDetallePedido)
         .then((response) => {
            if (response.status === 400) {
           console.error("Stock insuficiente");
@@ -200,16 +199,14 @@ function Pedidos() {
 
   const handleSaveAdd = () => {
     const nuevoDetallePedido = {
-      sucursal: {
-        idSucursal: parseInt(nuevoDetalle.idSucursal),
-      },
-      fechaPedido: parseInt(nuevoDetalle.fechaPedido),
-      estado: {
-        idEstado: parseInt(nuevoDetalle.idEstado),
-      }
+
+      nombreProducto: nuevoDetalle.nombreProducto,
+      tipo: nuevoDetalle.tipo,
+      stock: parseInt(nuevoDetalle.stock),
+      
     };
 
-    PedidosService.createPedido(nuevoDetallePedido)
+    ProductosService.createProducto(nuevoDetallePedido)
       .then((response) => {
         console.log("Detalle de pedido agregado:", response);
         obtenerDetallePedidos();
@@ -230,26 +227,19 @@ function Pedidos() {
   const handleSaveAddDetalle = () => {
     console.log();
     const nuevoDetallePedido2 = {
-      pedido: {
-        idPedido: parseInt(nuevoDetalle2.idPedido),
-      },
-      
-      producto: {
-        idProducto: parseInt(nuevoDetalle2.idProducto),
-      },
-      cantidad: parseInt(nuevoDetalle2.cantidad),
-      direccionEnvio: nuevoDetalle2.direccionEnvio,
+      nombreProducto : nuevoDetalle2.nombreProducto,
+      tipo: nuevoDetalle2.tipo,
+      stock : nuevoDetalle2.stock
     };
     console.log('enviara esto joder ' , nuevoDetallePedido2);
-    PedidosService.createDetallePedido(nuevoDetallePedido2)
+    ProductosService.createProducto(nuevoDetallePedido2)
       .then((response) => {
         console.log("Detalle de pedido agregado:", response);
         obtenerDetallePedidos();
         setNuevoDetalle2({
-          idPedido: "",
-          idProducto: "",
-          cantidad: "",
-          direccionEnvio: "",
+          nombreProducto: "",
+          tipo: "",
+          stock: ""
         });
         setShowAddDialog2(false);
       })
@@ -277,7 +267,7 @@ function Pedidos() {
       return;
     }
 
-    PedidosService.updatePedido(editingDetalle.idPedido, editingDetalle)
+    ProductosService.updateProducto(editingDetalle.idProducto, editingDetalle)
       .then((response) => {
         console.log("Detalle de pedido actualizado correctamente:", response);
         obtenerDetallePedidos();
@@ -327,13 +317,13 @@ function Pedidos() {
                 </Link>
               </li>
               <li className="nav-item">
-                <Link to="/productos" className="nav-link">
-                  Productos
+                <Link to="/pedido" className="nav-link">
+                  Pedidos
                 </Link>
               </li>
             </ul>
             <Button
-              label="Agregar Pedido"
+              label="Agregar Producto"
               icon="pi pi-plus"
               onClick={handleAddClick}
             />
@@ -342,47 +332,30 @@ function Pedidos() {
       </nav>
       <main className="col-md-9 ms-sm-auto col-lg-10 px-md-4">
         <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-          <h1 className="h2">Pedidos</h1>
+          <h1 className="h2">Productos</h1>
         </div>
         <table className="table">
           <thead>
             <tr>
             <th>Id Pedido</th>
-              <th>No.</th>
-              <th>fechaPedido</th>
-              <th>sucursal</th>
-              <th>Estado</th>
-              <th>accion</th>
+              <th>Nombre Producto</th>
+              <th>tipo</th>
+              <th>stock</th>
+              <th>acciones</th>
             </tr>
           </thead>
           <tbody>
             {detallePedidos.map((detallePedido) => (
-              <tr key={detallePedido.idPedido}>
-                <td>{detallePedido.idPedido}</td>
-                <td>{detallePedido.sucursal.idSucursal}</td>
-                <td>{formatearFecha(detallePedido.fechaPedido)}</td>
-                <td>{detallePedido.sucursal.nombreSucursal}</td>
-                <td>{detallePedido.estado.descripcion}</td>
+              <tr key={detallePedido.idProducto}>
+                <td>{detallePedido.idProducto}</td>
+                <td>{detallePedido.nombreProducto}</td>
+                <td>{detallePedido.tipo}</td>
+                <td>{detallePedido.stock}</td>
                 <td>
                   <Button
                     label="Editar"
                     icon="pi pi-pencil"
                     onClick={() => handleEditClick(detallePedido)}
-                  />
-                  <Button
-                    label="Entregar"
-                    icon="pi pi-check"
-                    onClick={() => handleEntregar(detallePedido)}
-                  />
-                  <Button
-                    label="Detalles"
-                    icon="pi pi-search"
-                    onClick={() => handleDetalleClick(detallePedido.idPedido)}
-                  />
-                  <Button
-                    label="Agregar Detalle"
-                    icon="pi pi-search"
-                    onClick={() => handleAddDetalleClick()}
                   />
                 </td>
               </tr>
@@ -390,39 +363,39 @@ function Pedidos() {
           </tbody>
         </table>
       </main>
-      <Dialog header="Agregar Nuevo pedido" visible={showAddDialog} style={{ width: "50vw" }} onHide={handleCancelAdd}>
+      <Dialog header="Agregar Nuevo producto" visible={showAddDialog} style={{ width: "50vw" }} onHide={handleCancelAdd}>
         <div className="p-grid">
           <div className="p-col-12">
             <span className="p-float-label">
               <InputText
-                id="idSucursal"
-                name="idSucursal"
-                value={nuevoDetalle.idSucursal}
+                id="nombreProducto"
+                name="nombreProducto"
+                value={nuevoDetalle.nombreProducto}
                 onChange={handleInputChange}
               />
-              <label htmlFor="idSucursal">ID Sucursal</label>
+              <label htmlFor="nombreProducto">Nombre Producto</label>
             </span>
           </div>
           <div className="p-col-12">
             <span className="p-float-label">
               <InputText
-                id="fechaPedido"
-                name="fechaPedido"
-                value={nuevoDetalle.fechaPedido}
+                id="tipo"
+                name="tipo"
+                value={nuevoDetalle.tipo}
                 onChange={handleInputChange}
               />
-              <label htmlFor="fechaPedido">fecha</label>
+              <label htmlFor="tipo">Tipo</label>
             </span>
           </div>
           <div className="p-col-12">
             <span className="p-float-label">
               <InputText
-                id="idEstado"
-                name="idEstado"
-                value={nuevoDetalle.idEstado}
+                id="stock"
+                name="stock"
+                value={nuevoDetalle.stock}
                 onChange={handleInputChange}
               />
-              <label htmlFor="idEstado">ID ESTADO</label>
+              <label htmlFor="stock">Stock</label>
             </span>
           </div>
           <div className="p-col-12">
@@ -515,34 +488,34 @@ function Pedidos() {
           <div className="p-col-12">
             <span className="p-float-label">
               <InputText
-                id="idSucursal"
-                name="idSucursal"
-                value={editingDetalle ? editingDetalle.sucursal.idSucursal : ""}
+                id="nombreProducto"
+                name="nombreProducto"
+                value={editingDetalle ? editingDetalle.nombreProducto : ""}
                 onChange={handleInputChange}
               />
-              <label htmlFor="idSucursal">ID Sucursal</label>
+              <label htmlFor="nombreProducto">Nombre Producto</label>
             </span>
           </div>
           <div className="p-col-12">
             <span className="p-float-label">
               <InputText
-                id="fechaPedido"
-                name="fechaPedido"
-                value={editingDetalle ? editingDetalle.fechaPedido : ""}
+                id="tipo"
+                name="tipo"
+                value={editingDetalle ? editingDetalle.tipo : ""}
                 onChange={handleInputChange}
               />
-              <label htmlFor="fechaPedido">ID Producto</label>
+              <label htmlFor="tipo">Tipo </label>
             </span>
           </div>
           <div className="p-col-12">
             <span className="p-float-label">
               <InputText
-                id="idEstado"
-                name="idEstado"
-                value={editingDetalle ? editingDetalle.idEstado : ""}
+                id="stock"
+                name="stock"
+                value={editingDetalle ? editingDetalle.stock : ""}
                 onChange={handleInputChange}
               />
-              <label htmlFor="idEstado">id estado</label>
+              <label htmlFor="stock">stock</label>
             </span>
           </div>
           <div className="p-col-12">
@@ -576,4 +549,4 @@ function Pedidos() {
   );
 }
 
-export default Pedidos;
+export default Productos;
